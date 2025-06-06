@@ -58,6 +58,23 @@
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- MongoDB 驱动 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-mongodb-atlas-store-spring-boot-starter</artifactId>
+        </dependency>
+
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongodb-driver-sync</artifactId>
+            </dependency>
+
 
 
 
@@ -76,6 +93,7 @@
             <artifactId>dashscope-sdk-java</artifactId>
             <version>2.19.5</version>
         </dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -83,6 +101,13 @@
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
                 <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongodb-driver-bom</artifactId>
+                <version>5.5.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

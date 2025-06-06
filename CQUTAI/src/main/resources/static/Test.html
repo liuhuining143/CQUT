@@ -1,190 +1,1049 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Chat 测试</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知理</title>
+  <link href="./img/AI.svg" rel="icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.js"></script>
   <style>
-    body {
-      font-family: "Microsoft YaHei", sans-serif;
-      background-color: #f4f6f9;
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    :root {
+      --primary: #4e54c8;
+      --secondary: #8f94fb;
+      --accent: #6a11cb;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --dark-bg: #f5f7fb;
+      --darker-bg: #eef1f7;
+      --user-bg: #4e54c8;
+      --ai-bg: #ffffff;
+      --border: #e0e5ec;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --info: #17a2b8;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --sidebar-bg: #ffffff;
+      --session-active: #f0f4ff;
+      --session-hover: #f8f9ff;
+      --user-msg-color: #fff;
+      --ai-msg-color: #4a4a4a;
+    }
+
+    body {
+      min-height: 100vh;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, #6A0DAD, #ADD8E6, #E0B0FF);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    #app {
+      display: flex;
+      max-width: 1400px;
+      height: 100vh;
+      margin: 0 auto;
+      padding: 0 15px;
+      gap: 20px;
+    }
+
+    /* 左侧状态区域 */
+    .status-container {
+      position: absolute;
+      left: 0;
+      flex-direction: column;
+      align-items: center;
+      width: 100px;
+      height: 100vh;
+      gap: 15px;
+    }
+
+    .logo-icon {
+      position: absolute;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      width: 70px;
+      height:70px;
+      top:30px;
+      left: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .logo-icon img {
+      width: 100%;
+      height: auto;
+    }
+
+    .status-icon {
+      position: absolute;
+      top: 40%;
+      left: 25px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      background: #ddd;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .status-disconnected .status-icon {
+      background: #dc3545;
+    }
+
+    .status-connecting .status-icon {
+      background: #ffc107;
+    }
+
+    .status-connected .status-icon {
+      background: #28a745;
+    }
+
+    .model-info {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      align-items: center;
+      gap: 5px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      font-size: 0.9rem;
+      color: var(--primary);
+      font-weight: 500;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      width: 90%;
+      left: 9px;
+      bottom: 30px;
+      position: absolute;
+    }
+
+    .model-info i {
+      font-size: 1.2rem;
+      margin-bottom: 5px;
+    }
+
+    /* 左侧边栏样式 */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      border-top-left-radius: 15px;
+      border-bottom-left-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-header h2 {
+      font-size: 1.3rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .session-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(90deg, #d73a49, #f54d4d);
+      color: white;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .session-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 0;
+    }
+
+    .session-item {
+      padding: 15px 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .session-item:hover {
+      background-color: var(--session-hover);
+    }
+
+    .session-item.active {
+      background-color: var(--session-active);
+      border-left: 4px solid var(--primary);
+    }
+
+    .session-id {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .session-preview {
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .session-date {
+      font-size: 0.75rem;
+      color: #999;
+      margin-top: 5px;
+    }
+
+    .session-item .actions {
+      display: none;
+      margin-top: 8px;
+    }
+
+    .session-item:hover .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .session-action-btn {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      background: var(--darker-bg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .session-action-btn:hover {
+      background: var(--light);
+    }
+
+    /* 主聊天区域样式 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      width: 73vw;
+    }
+
+    .logo-text {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo-text h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 5px;
+    }
+
+    .logo-text p {
+      font-size: 1rem;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
 
     .chat-container {
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
+      overflow: hidden;
+      border-top-right-radius: 15px;
+      border-bottom-right-radius: 15px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
 
-    .chat-output {
+    .chat-history {
       flex: 1;
+      padding: 25px;
       overflow-y: auto;
-      border: 1px solid #ddd;
-      background-color: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      font-size: 16px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      min-height: 300px;
-      position: relative;
-    }
-
-    .input-group {
       display: flex;
-      margin-top: 15px;
-    }
-
-    input[type="text"] {
-      flex: 1;
-      padding: 12px 15px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px 0 0 6px;
-      outline: none;
-    }
-
-    button {
-      padding: 12px 20px;
-      font-size: 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 0 6px 6px 0;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #0056b3;
+      flex-direction: column;
+      gap: 25px;
+      background: transparent;
     }
 
     .message {
-      margin-bottom: 10px;
-      padding: 10px 15px;
-      background-color: #f1f1f1;
-      border-radius: 6px;
-      font-size: 15px;
+      max-width: 85%;
+      padding: 20px;
+      border-radius: 15px;
+      line-height: 1.7;
+      position: relative;
+      animation: fadeIn 0.4s ease;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease;
     }
 
-    .user {
-      background-color: #d1ecdd;
+    .message:hover {
+      transform: translateY(-2px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-message {
       align-self: flex-end;
-      text-align: right;
+      background: var(--user-bg);
+      border-bottom-right-radius: 5px;
+      color: var(--user-msg-color);
     }
 
-    .bot {
-      background-color: #e8e8ff;
+    .ai-message {
+      align-self: flex-start;
+      background: var(--ai-bg);
+      border-bottom-left-radius: 5px;
+      border: 1px solid var(--border);
+      color: var(--ai-msg-color);
     }
 
-    .loading {
-      font-style: italic;
-      color: #888;
-      margin-top: 5px;
+    .message-header {
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.1rem;
+    }
+
+    .user-message .message-header {
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .ai-message .message-header {
+      color: var(--primary);
+    }
+
+    .message-content {
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    .message-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .user-message .message-icon {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .ai-message .message-icon {
+      background: rgba(78, 84, 200, 0.1);
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      background: var(--ai-bg);
+      border-radius: 15px;
+      align-self: flex-start;
+      margin-top: 10px;
+      width: fit-content;
+      border: 1px solid var(--border);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .typing-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--primary);
+      border-radius: 50%;
+      opacity: 0.7;
+      animation: bounce 1.5s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
+    }
+
+    .chat-input-area {
+      padding: 20px;
+      background: rgba(245, 247, 251, 0.8);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-container {
+      display: flex;
+      gap: 15px;
+      align-items: flex-end;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: 18px 20px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      resize: none;
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .message-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(78, 84, 200, 0.1);
+    }
+
+    .send-btn {
+      padding: 16px 25px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(78, 84, 200, 0.2);
+    }
+
+    .send-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-3px);
+      box-shadow: 0 7px 20px rgba(78, 84, 200, 0.3);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 滚动条样式 */
+    .chat-history::-webkit-scrollbar,
+    .session-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-history::-webkit-scrollbar-track,
+    .session-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-history::-webkit-scrollbar-thumb,
+    .session-list::-webkit-scrollbar-thumb {
+      background: #d0d5e0;
+      border-radius: 4px;
+    }
+
+    .chat-history::-webkit-scrollbar-thumb:hover,
+    .session-list::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 900px) {
+      #app {
+        flex-direction: column;
+      }
+
+      .status-container {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        margin: 15px 0;
+        gap: 30px;
+      }
+
+      .sidebar {
+        width: 100%;
+        max-height: 300px;
+        border-radius: 15px;
+      }
+
+      .main-content {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .message {
+        max-width: 90%;
+      }
+
+      .input-container {
+        flex-direction: column;
+      }
+
+      .send-btn {
+        width: 100%;
+        padding: 15px;
+      }
+    }
+
+    .welcome-container {
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .welcome-title {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .welcome-text {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .out{
+      display: flex;
+      margin: 8px 8px 8px 2vw;
+
+    }
+    .txt{
+      color: white;
+      position: absolute;
+      left: 34px;
+      top: 49%;
+    }
+    .te{
+      width: 90px;
+      height: auto;
+      left: 12px;
+      top:80px;
+      position: absolute;
     }
   </style>
 </head>
 <body>
-<div class="chat-container">
-  <h2 style="text-align:center;">AI 聊天测试</h2>
+<div id="app">
+  <!-- 左侧状态区域 -->
+  <div class="status-container" :class="connectionStatusClass">
+    <div class="logo-icon">
+      <img src="./img/AI.svg" alt="知理 AI 助手">
 
-  <div id="chatOutput" class="chat-output"></div>
+    </div>
+    <img src="./img/知理.png" class="te">
 
-  <div class="input-group">
-    <input type="text" id="prompt" placeholder="输入你的问题..." onkeypress="handleKeyPress(event)" />
-    <button onclick="sendPrompt()">发送</button>
+    <div class="status-icon">
+      <i :class="{
+        'fas fa-plug-circle-xmark': connectionStatus === 'disconnected',
+        'fas fa-rotate': connectionStatus === 'connecting',
+        'fas fa-plug-circle-check': connectionStatus === 'connected'
+      }"></i>
+    </div>
+    <h3 class="txt">状态</h3>
+
+    <div class="model-info">
+      <i class="fas fa-microchip"></i>
+      <span>DeepSeek-R1</span>
+    </div>
   </div>
+<div class="out">
+  <!-- 左侧边栏 - 会话管理 -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2><i class="fas fa-comments"></i> 会话记录</h2>
+    </div>
+
+    <div class="session-controls">
+      <button class="btn btn-primary" @click="() => createNewSession()">
+        <i class="fas fa-plus-circle"></i> 新建会话
+      </button>
+      <button class="btn btn-danger" @click="clearAllSessions">
+        <i class="fas fa-trash-alt"></i> 清除所有会话
+      </button>
+    </div>
+
+    <div class="session-list">
+      <div
+              v-for="session in sessions"
+              :key="session.id"
+              :class="['session-item', currentSessionId === session.id ? 'active' : '']"
+              @click="switchSession(session.id)"
+      >
+        <div class="session-id">
+          <i class="fas fa-comment"></i> {{ session.id }}
+        </div>
+        <div class="session-preview">
+          {{ session.preview || '新会话' }}
+        </div>
+        <div class="session-date">
+          {{ formatDate(session.lastActive) }}
+        </div>
+        <div class="actions">
+          <button class="session-action-btn" @click.stop="deleteSession(session.id)">
+            <i class="fas fa-trash"></i> 删除
+          </button>
+          <button class="session-action-btn" @click.stop="clearSession(session.id)">
+            <i class="fas fa-broom"></i> 清除
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧主内容区域 -->
+  <div class="main-content">
+    <div class="chat-container">
+      <div class="chat-history" ref="chatHistory">
+        <div class="welcome-container" v-if="messages.length === 0">
+          <div class="welcome-title">欢迎使用知理智能助手</div>
+          <div class="welcome-text">
+            我是重庆理工大学的智能AI助手知理，可以解答您关于学校的各类问题<br>
+            请开始提问或从左侧选择历史会话
+          </div>
+        </div>
+
+        <div v-if="messages.length === 0" class="message ai-message">
+          <div class="message-header">
+            <div class="message-icon">
+              <img src="./img/AI.svg" alt="知理" style="width: 20px; height: 20px;">
+            </div>
+            知理
+          </div>
+          <div class="message-content">
+            您好！我是重庆理工大学的智能AI助手知理。我可以帮助您解答所有关于重庆理工大学的问题，包括招生信息、专业设置、校园生活、教务系统使用等。请问有什么可以帮您的吗？
+          </div>
+        </div>
+
+        <template v-for="(msg, index) in messages" :key="index">
+          <div :class="['message', msg.role === 'user' ? 'user-message' : 'ai-message']">
+            <div class="message-header">
+              <div class="message-icon">
+                <template v-if="msg.role === 'user'">
+                  <i class="fas fa-user"></i>
+                </template>
+                <template v-else>
+                  <img src="./img/AI.svg" alt="知理" style="width: 20px; height: 20px;">
+                </template>
+              </div>
+              {{ msg.role === 'user' ? '您' : '知理' }}
+            </div>
+            <div class="message-content">
+              {{ msg.content }}
+            </div>
+          </div>
+        </template>
+
+        <div v-if="isTyping" class="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <span>思考中...</span>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <div class="input-container">
+          <textarea
+                  class="message-input"
+                  v-model="inputMessage"
+                  placeholder="所有问题，终有答案....."
+                  rows="1"
+                  @keydown.enter.except.prevent="sendMessage"
+                  @input="resizeTextarea"
+                  ref="messageInput"
+          ></textarea>
+          <button
+                  class="send-btn"
+                  @click="sendMessage"
+                  :disabled="isSending"
+          >
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 
 <script>
-  function sendPrompt() {
-    const promptInput = document.getElementById('prompt');
-    const prompt = promptInput.value.trim();
-    if (!prompt) return;
+  const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
-    const chatOutput = document.getElementById('chatOutput');
+  createApp({
+    setup() {
+      // 状态管理
+      const messages = ref([]);
+      const inputMessage = ref('');
+      const currentSessionId = ref('');
+      const isSending = ref(false);
+      const isTyping = ref(false);
+      const connectionStatus = ref('disconnected'); // 'disconnected', 'connecting', 'connected'
+      const eventSource = ref(null);
+      const chatHistory = ref(null);
+      const messageInput = ref(null);
 
-    // 显示用户消息
-    const userMessage = document.createElement('div');
-    userMessage.className = 'message user';
-    userMessage.textContent = prompt;
-    chatOutput.appendChild(userMessage);
+      // 会话管理
+      const sessions = ref([]);
 
-    // 清空输入框并滚动到底部
-    promptInput.value = '';
-    scrollToBottom();
+      // 计算属性
+      const connectionStatusText = computed(() => {
+        switch(connectionStatus.value) {
+          case 'connected': return '已连接';
+          case 'connecting': return '连接中...';
+          default: return '已断开';
+        }
+      });
 
-    // 创建加载提示 / bot 回复容器
-    const botMessage = document.createElement('div');
-    botMessage.className = 'message bot';
-    botMessage.textContent = '正在思考中...';
-    chatOutput.appendChild(botMessage);
-    scrollToBottom();
+      const connectionStatusClass = computed(() => {
+        return `status-${connectionStatus.value}`;
+      });
 
-    const url = '/ai/chat?prompt=' + encodeURIComponent(prompt);
+      // 方法
+      const resizeTextarea = () => {
+        const textarea = messageInput.value;
+        if (textarea) {
+          textarea.style.height = 'auto';
+          textarea.style.height = (textarea.scrollHeight) + 'px';
+        }
+      };
 
-    fetch(url)
-            .then(response => {
-              const reader = response.body.getReader();
-              const decoder = new TextDecoder();
-              let fullText = "";
+      const scrollToBottom = () => {
+        nextTick(() => {
+          if (chatHistory.value) {
+            chatHistory.value.scrollTop = chatHistory.value.scrollHeight;
+          }
+        });
+      };
 
-              function processText({ done, value }) {
-                if (done) {
-                  console.log("流结束");
-                  return;
-                }
+      // 格式化日期
+      const formatDate = (timestamp) => {
+        if (!timestamp) return '';
+        const date = new Date(timestamp);
+        return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      };
 
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n");
+      // 更新会话预览
+      const updateSessionPreview = (sessionId, message) => {
+        const session = sessions.value.find(s => s.id === sessionId);
+        if (session) {
+          // 取最后一条消息的前30个字符作为预览
+          session.preview = message.length > 30 ? message.substring(0, 30) + '...' : message;
+          session.lastActive = Date.now();
 
-                lines.forEach(line => {
-                  if (line.startsWith("data: ")) {
-                    let content = line.slice(6); // 去掉 "data: " 前缀
+          // 按最后活跃时间排序
+          sessions.value.sort((a, b) => b.lastActive - a.lastActive);
+          saveSessionsToLocalStorage();
+        }
+      };
 
-                    console.log("收到内容:", content); // 调试用
+      // 保存会话到本地存储
+      const saveSessionsToLocalStorage = () => {
+        localStorage.setItem('chat_sessions', JSON.stringify(sessions.value));
+      };
 
-                    // 追加内容
-                    fullText += content;
+      // 从本地存储加载会话
+      const loadSessionsFromLocalStorage = () => {
+        const savedSessions = localStorage.getItem('chat_sessions');
+        if (savedSessions) {
+          sessions.value = JSON.parse(savedSessions);
+          // 如果有会话，设置第一个会话为当前会话
+          if (sessions.value.length > 0) {
+            currentSessionId.value = sessions.value[0].id;
+          } else {
+            // 没有会话时创建一个新会话
+            createNewSession();
+          }
+        } else {
+          // 初始化第一个会话
+          createNewSession();
+        }
+      };
 
-                    // 更新页面内容
-                    botMessage.textContent = fullText;
-                  }
-                });
+      // 创建新会话
+      const createNewSession = (sessionId = null) => {
+        const newSessionId = sessionId || 'session-' + Math.floor(1000 + Math.random() * 9000);
+        currentSessionId.value = newSessionId;
+        loadMessagesForSession(newSessionId);
+        messages.value = [];
+        inputMessage.value = '';
 
-                scrollToBottom();
-                return reader.read().then(processText);
-              }
+        // 添加到会话列表
+        if (!sessions.value.some(s => s.id === newSessionId)) {
+          sessions.value.unshift({
+            id: newSessionId,
+            preview: '新会话',
+            lastActive: Date.now()
+          });
+          saveSessionsToLocalStorage();
+        }
 
-              return reader.read().then(processText);
-            })
-            .catch(error => {
-              console.error('请求失败:', error);
-              botMessage.textContent = '请求失败，请检查后端是否运行。';
+        scrollToBottom();
+      };
+
+      const switchSession = (sessionId) => {
+        if (sessionId === currentSessionId.value) return;
+
+        // 保存当前会话的状态到本地存储（可选）
+        saveCurrentSessionToLocalStorage();
+
+        // 切换当前会话ID
+        currentSessionId.value = sessionId;
+
+        // 加载该会话的历史消息
+        loadMessagesForSession(sessionId);
+
+        scrollToBottom();
+      };
+
+      const saveCurrentSessionToLocalStorage = () => {
+        if (currentSessionId.value) {
+          localStorage.setItem(`chat_messages_${currentSessionId.value}`, JSON.stringify(messages.value));
+        }
+      };
+
+
+      const loadMessagesForSession = (sessionId) => {
+        const savedMessages = localStorage.getItem(`chat_messages_${sessionId}`);
+        if (savedMessages) {
+          messages.value = JSON.parse(savedMessages);
+        } else {
+          messages.value = [];
+        }
+      };
+
+
+
+
+
+      // 删除会话
+      const deleteSession = (sessionId) => {
+        if (confirm('确定要删除这个会话吗？删除后无法恢复。')) {
+          // 从列表中移除
+          sessions.value = sessions.value.filter(s => s.id !== sessionId);
+          saveSessionsToLocalStorage();
+
+          // 如果删除的是当前会话，切换到第一个会话
+          if (sessionId === currentSessionId.value && sessions.value.length > 0) {
+            currentSessionId.value = sessions.value[0].id;
+          } else if (sessions.value.length === 0) {
+            // 没有会话时创建一个新会话
+            createNewSession();
+          }
+        }
+      };
+
+      // 清除会话内容
+      const clearSession = (sessionId) => {
+        if (confirm('确定要清除这个会话的内容吗？')) {
+          if (sessionId === currentSessionId.value) {
+            messages.value = [];
+          }
+
+          // 在实际应用中，这里应该调用后端API清除该会话的历史记录
+          fetch(`/ai/clearSession?chatId=${encodeURIComponent(sessionId)}`)
+                  .then(response => response.text())
+                  .then(result => {
+                    console.log(result);
+                  })
+                  .catch(error => {
+                    console.error('清除会话失败:', error);
+                  });
+        }
+      };
+
+      // 清除所有会话
+      const clearAllSessions = () => {
+        if (confirm('确定要清除所有会话吗？这将删除所有会话记录。')) {
+          // 清除所有会话
+          sessions.value = [];
+
+          // 创建新会话
+          createNewSession();
+
+          // 在实际应用中，这里应该调用后端API清除所有会话
+          // 注意：后端目前没有清除所有会话的API，需要实现
+        }
+      };
+
+      // 发送消息
+      const sendMessage = () => {
+        const message = inputMessage.value.trim();
+        if (!message || isSending.value) return;
+
+        // 添加用户消息
+        messages.value.push({
+          role: 'user',
+          content: message
+        });
+
+        // 更新会话预览
+        updateSessionPreview(currentSessionId.value, message);
+
+        inputMessage.value = '';
+        resizeTextarea();
+        scrollToBottom();
+
+        // 显示输入指示器
+        isTyping.value = true;
+        isSending.value = true;
+        connectionStatus.value = 'connecting';
+
+        // 关闭之前的连接（如果有）
+        if (eventSource.value) {
+          eventSource.value.close();
+        }
+
+        // 创建新的EventSource连接
+        const url = `/ai/chat?prompt=${encodeURIComponent(message)}&chatId=${encodeURIComponent(currentSessionId.value)}`;
+        eventSource.value = new EventSource(url);
+
+        let aiResponse = '';
+
+        eventSource.value.onmessage = (event) => {
+          connectionStatus.value = 'connected';
+
+          aiResponse += event.data;
+
+          // 更新或创建AI消息
+          const aiMessageIndex = messages.value.findIndex(msg => msg.role === 'ai' && msg.isStreaming);
+
+          if (aiMessageIndex === -1) {
+            messages.value.push({
+              role: 'ai',
+              content: aiResponse,
+              isStreaming: true
             });
-  }
+          } else {
+            messages.value[aiMessageIndex].content = aiResponse;
+          }
 
-  function handleKeyPress(event) {
-    if (event.key === 'Enter') {
-      sendPrompt();
+          scrollToBottom();
+        };
+
+        eventSource.value.onerror = () => {
+          connectionStatus.value = 'disconnected';
+          isTyping.value = false;
+          isSending.value = false;
+
+          // 完成AI消息
+          const aiMessageIndex = messages.value.findIndex(msg => msg.role === 'ai' && msg.isStreaming);
+          if (aiMessageIndex !== -1) {
+            messages.value[aiMessageIndex].isStreaming = false;
+
+            // 如果没有内容，显示错误信息
+            if (!messages.value[aiMessageIndex].content.trim()) {
+              messages.value[aiMessageIndex].content = '抱歉，我暂时无法回答这个问题。请稍后再试或换一个问题。';
+            }
+          }
+
+          if (eventSource.value) {
+            eventSource.value.close();
+          }
+        };
+      };
+
+      // 初始化
+      onMounted(() => {
+        loadSessionsFromLocalStorage();
+        scrollToBottom();
+      });
+
+      return {
+        messages,
+        inputMessage,
+        currentSessionId,
+        isSending,
+        isTyping,
+        connectionStatus,
+        chatHistory,
+        messageInput,
+        sessions,
+        connectionStatusText,
+        connectionStatusClass,
+        resizeTextarea,
+        sendMessage,
+        createNewSession,
+        switchSession,
+        deleteSession,
+        clearSession,
+        clearAllSessions,
+        formatDate
+      };
     }
-  }
-
-  function scrollToBottom() {
-    const chatOutput = document.getElementById('chatOutput');
-    chatOutput.scrollTop = chatOutput.scrollHeight;
-  }
+  }).mount('#app');
 </script>
-
 </body>
 </html>
